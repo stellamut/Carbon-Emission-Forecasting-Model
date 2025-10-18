@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import joblib # Clean import statement
 import numpy as np
+import matplotlib.pyplot as plt
 
 # --- Configuration ---
 # Streamlit page configuration (must be the first Streamlit command)
@@ -98,7 +99,6 @@ st.markdown("""
         color: #28a745 !important;
         border-left: 5px solid #28a745 !important;
     }
-    /* You can define custom success/info based on your palette */
     /* Example: using peach for success/info messages */
     .stAlert.info {
         background-color: #ffe0b2; /* Peach */
@@ -128,14 +128,14 @@ st.markdown("""
 
 # --- Asset Paths ---
 # Ensure these paths match where your model and scaler are saved!
-# Check your `sdg13_carbon_forecast.py` output for the exact model name.
-MODEL_PATH = 'random_forest_regressor_model.joblib' # Assuming Random Forest was best
+MODEL_PATH = 'random_forest_regressor_model.joblib' 
 SCALER_PATH = 'scaler.joblib'
 
 # --- Load Model and Scaler ---
 @st.cache_resource # Cache the model and scaler to avoid reloading on every rerun
 def load_model_assets():
     try:
+        # The clean import joblib above ensures this line runs correctly.
         model = joblib.load(MODEL_PATH)
         scaler = joblib.load(SCALER_PATH)
         return model, scaler
@@ -143,6 +143,7 @@ def load_model_assets():
         st.error(f"Error: Model or scaler file not found. Please ensure '{MODEL_PATH}' and '{SCALER_PATH}' are in the same directory as this app.")
         st.stop()
     except Exception as e:
+        # Generic error handler is important.
         st.error(f"An error occurred while loading model assets: {e}")
         st.stop()
 
@@ -175,7 +176,6 @@ if st.sidebar.button("Predict CO₂ Emissions"):
     input_data = pd.DataFrame([[gdp, energy_consumption, population, year]], columns=FEATURES)
 
     # Scale the input data using the loaded scaler
-    # Note: We use .transform(), not .fit_transform() as the scaler is already fitted
     scaled_input_data = pd.DataFrame(scaler.transform(input_data), columns=FEATURES)
 
     # Make prediction
@@ -199,20 +199,19 @@ if st.sidebar.button("Predict CO₂ Emissions"):
     """, unsafe_allow_html=True)
     
     # Optional: Display feature importance if using Random Forest
-    if isinstance(model, joblib.ParallelBackendBase) or isinstance(model, type(joblib.load(MODEL_PATH))): # Check if it's a RandomForest model for feature_importances
-        if hasattr(model, 'feature_importances_'):
-            st.subheader("Key Factors Influencing Emissions")
-            feature_importances = pd.Series(model.feature_importances_, index=FEATURES).sort_values(ascending=False)
-            
-            st.info("The chart below illustrates which factors had the most significant impact on the emission forecast according to our model.")
-            
-            fig, ax = plt.subplots(figsize=(10, 6))
-            feature_importances.plot(kind='barh', ax=ax, color='#ffb800') # Golden yellow bars
-            ax.set_title("Feature Importance", color='#1a4a35') # Dark green title
-            ax.set_xlabel("Importance", color='#333333')
-            ax.set_ylabel("Feature", color='#333333')
-            plt.tight_layout()
-            st.pyplot(fig)
+    if hasattr(model, 'feature_importances_'):
+        st.subheader("Key Factors Influencing Emissions")
+        feature_importances = pd.Series(model.feature_importances_, index=FEATURES).sort_values(ascending=False)
+        
+        st.info("The chart below illustrates which factors had the most significant impact on the emission forecast according to our model.")
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        feature_importances.plot(kind='barh', ax=ax, color='#ffb800') # Golden yellow bars
+        ax.set_title("Feature Importance", color='#1a4a35') # Dark green title
+        ax.set_xlabel("Importance", color='#333333')
+        ax.set_ylabel("Feature", color='#333333')
+        plt.tight_layout()
+        st.pyplot(fig)
 
 # --- About Section (Expander) ---
 with st.expander("About This Project"):
