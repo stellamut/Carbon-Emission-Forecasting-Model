@@ -104,7 +104,8 @@ def run_forecasting_model():
     df.dropna(subset=['CO2_Emissions_KT'], inplace=True)
     
     # b) Handle Missing Features: Impute feature NaNs with the mean
-    df['Energy_Consumption_TJ'].fillna(df['Energy_Consumption_TJ'].mean(), inplace=True)
+    # FIX: Replaced inplace=True with direct assignment to prevent Pandas FutureWarning
+    df['Energy_Consumption_TJ'] = df['Energy_Consumption_TJ'].fillna(df['Energy_Consumption_TJ'].mean())
     
     # Define Features (X) and Target (y)
     features = ['GDP_Billion', 'Energy_Consumption_TJ', 'Population_Million', 'Year']
@@ -196,10 +197,11 @@ def run_forecasting_model():
     
     # 2. Preprocess data using the SAVED scaler
     # Note: We use scaler.transform(), NOT scaler.fit_transform()
-    new_data_scaled = scaler.transform(new_df)
+    # FIX: Convert scaled NumPy array back to DataFrame to prevent Scikit-learn UserWarning
+    new_data_scaled_df = pd.DataFrame(scaler.transform(new_df), columns=features)
     
     # 3. Predict using the SAVED model
-    predicted_emission = best_model.predict(new_data_scaled)[0]
+    predicted_emission = best_model.predict(new_data_scaled_df)[0]
     
     print(f"\nPolicy Recommendation and Forecast:")
     print(f"-> Forecasted CO₂ Emission for 2025 (Region X): {predicted_emission:.2f} KT")
