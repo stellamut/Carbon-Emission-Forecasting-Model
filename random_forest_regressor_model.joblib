@@ -1,0 +1,2 @@
+import joblib
+model = joblib.load('random_forest_regressor_model.joblib')
