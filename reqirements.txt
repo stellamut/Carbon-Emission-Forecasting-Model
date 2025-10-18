@@ -1,5 +1,5 @@
-numpy
+streamlit
 pandas
-scikit-learn
+numpy
 matplotlib
-joblib
+scikit-learn
